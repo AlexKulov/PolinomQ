@@ -273,7 +273,7 @@ void InitFswRcnf1(bit_configuration * InitC, uint8_t Elements, uint8_t Modes)
     SumExctMode = NumMode;
     MaxCnfgRnd = 20; //пусть будет столько пока 3.03.2022
 
-    char NamePolinomFile[128] = "PolEk.txt";
+    char NamePolinomFile[128] = "polynom/PolEk.txt";
     // char NamePolinomFile[128] = "SimplePol.txt";
     LoadPlnmFromFile(NamePolinomFile,&ScPolinim);
     PolinomInit(&ScPolinim);
@@ -312,7 +312,7 @@ bit_configuration InitFswRcnf(uint8_t Elements, uint8_t Modes)
     SumExctMode = NumMode;
     MaxCnfgRnd = 10; //пусть будет столько пока 3.03.2022
 
-    char NamePolinomFile[128] = "PolEk.txt";
+    char NamePolinomFile[128] = "polynom/PolEk.txt";
     // char NamePolinomFile[128] = "SimplePol.txt";
     LoadPlnmFromFile(NamePolinomFile,&ScPolinim);
     PolinomInit(&ScPolinim);
