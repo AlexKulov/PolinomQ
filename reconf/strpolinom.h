@@ -12,7 +12,7 @@
 #ifndef FALSE
     #define FALSE 0
 #endif
-/****** N_EL_MAX - обязательно кратно 8 *******/
+/****** N_EL_MAX - multiple 8 *******/
 #define N_EL_MAX  40
 #define BIT_IN_BYTE 8
 #define N_BIT_MAP (N_EL_MAX/BIT_IN_BYTE)
