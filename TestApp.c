@@ -11,10 +11,6 @@ void ShowCnfg(bit_configuration CnfgIn,unsigned char Nel){
     }
 }
 
-void testFunc(){
-	int test = 0;
-}
-
 int main(int argc, char *argv[])
 {
 
