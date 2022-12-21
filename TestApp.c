@@ -1,4 +1,4 @@
-#include "reconf\reconfiguration.h"
+#include "reconf/reconfiguration.h"
 
 
 void ShowCnfg(bit_configuration CnfgIn,unsigned char Nel){
