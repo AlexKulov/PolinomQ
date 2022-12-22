@@ -287,7 +287,7 @@ void bitToSmb (uint8_t * bitCnfg, uint16_t * smbCnfg)
     }
 }
 
-void BitToSmb2 (uint8_t * bitCnfg, uint16_t * smbCnfg)
+void bitToSmb2 (uint8_t * bitCnfg, uint16_t * smbCnfg)
 {
     for(uint8_t i=1; i<=N_EL_MAX;i++)
         if(rBit(bitCnfg,i) == P)
@@ -296,7 +296,7 @@ void BitToSmb2 (uint8_t * bitCnfg, uint16_t * smbCnfg)
            wSmb(smbCnfg,i,DOWN);
 }
 
-void SetCnfg(uint8_t * bitCnfg, uint8_t enOrDis)
+void setCnfg(uint8_t * bitCnfg, uint8_t enOrDis)
 {
     if(ENBL == enOrDis){
         for(uint8_t i=0;i<N_BIT_MAP;i++)

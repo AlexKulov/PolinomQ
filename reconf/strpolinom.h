@@ -49,7 +49,7 @@ typedef struct PolinomString
 
 typedef struct Polinom
 {
-   uint32_t nStr; // колическтво строк
+   uint16_t nStr; // колическтво строк
    uint8_t nEl; // колическтво элементов <= N_EL_MAX
    PolinomString strings[N_STR_MAX];
 
@@ -72,8 +72,8 @@ typedef struct Polinom
   void    wByte(uint8_t * str, uint8_t byte);//
   uint8_t rByte(uint8_t * str);
   void bitToSmb (uint8_t * bitCnfg, uint16_t * smbCnfg);//
-  void BitToSmb2 (uint8_t * bitCnfg, uint16_t * smbCnfg);
-  void SetCnfg(uint8_t * bitCnfg, uint8_t EnOrDis);
+  void bitToSmb2 (uint8_t * bitCnfg, uint16_t * smbCnfg);
+  void setCnfg(uint8_t * bitCnfg, uint8_t EnOrDis);
   _Bool wCnfg(uint8_t * bitCnfg, const uint8_t * charCnfg);
   _Bool copy(uint8_t * cnfg1, const uint8_t * cnfg2);    //
   _Bool copySmb(uint16_t * cnfg1, const uint16_t * cnfg2);

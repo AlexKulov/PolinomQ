@@ -1,12 +1,12 @@
 #include "reconf/reconfiguration.h"
 
+#include <stdio.h>
 
-void ShowCnfg(bit_configuration CnfgIn,unsigned char Nel){
-    printf("\n");
-    printf("Cnfg : ");
+void showCnfg(BitConfiguration cnfgIn,unsigned char nEl){
+    printf("\n Cnfg : ");
     unsigned char i;
-    for(i=1;i<=Nel;i++){
-            if(r_bit(CnfgIn.adr,i))
+    for(i=1;i<=nEl;i++){
+            if(rBit(cnfgIn,i))
                 printf("P%i ",i);
     }
 }
@@ -19,18 +19,18 @@ int main(int argc, char *argv[])
     unsigned char i;
     for (i=0;i<N_EL_MAX;i++)
         Tcur[i] = 0;
-    bit_configuration Con;
-    bit_configuration ConConst;
+    BitConfiguration * Con;
+    BitConfiguration ConConst;
     unsigned char Elements  =17;
     unsigned char Mode = 3;
 
-    Con = InitFswRcnf(Elements,Mode); //10 - элементов, 4 - режима
-    copy(ConConst.adr,Con.adr);
-    ShowCnfg(Con,Elements+Mode);
+    Con = initFswRcnf(Elements,Mode); //10 - элементов, 4 - режима
+    copy(ConConst,*Con);
+    showCnfg(*Con,Elements+Mode);
 
-    bit_configuration Cserv;
-    SetCnfg(Cserv.adr,ENBL);
-    long SumExctMode=0;
+    BitConfiguration servCnfg;
+    setCnfg(servCnfg,ENBL);
+    long sumExctMode=0;
     float Tsim=0;
     float dTsim=5;
     float Tfail=100;
@@ -48,8 +48,8 @@ int main(int argc, char *argv[])
         for(;Tsim<2000;){
             if(Tsim>Tfail){
                 for (i=iStart;i<=Elements && i>0;){
-                    if(ENBL == r_bit(Con.adr,i)){
-                        w_bit(Cserv.adr,i,DISBL);
+                    if(ENBL == rBit(*Con,i)){
+                        wBit(servCnfg,i,DISBL);
                         printf("\n Fail : %i", i);
                         Tfail = Tsim + 100;
                         break;
@@ -66,25 +66,25 @@ int main(int argc, char *argv[])
                     else
                         i++;
                 }
-                SumExctMode = (long)Reconfiguration(Cserv, Tcur,&Con);
-                if(SumExctMode == 0){
-                    printf("\n NP %f", Tsim);
+                sumExctMode = (long)reconfiguration(servCnfg, Tcur,Con);
+                if(sumExctMode == 0){
+                    printf("\n NP %f", (double)Tsim);
                     break;
                 }
                 else
-                    ShowCnfg(Con,Elements+Mode);
+                    showCnfg(*Con,Elements+Mode);
             }
 
             Tsim = Tsim + dTsim;
             for (i=1;i<=Elements;i++)
-                if(ENBL == r_bit(Con.adr,i))
+                if(ENBL == rBit(*Con ,i))
                     Tcur[i] = Tcur[i] + dTsim;
         }
         Tsim = 0;
         Tfail = 100;
         over = FALSE;
-        SetCnfg(Cserv.adr,ENBL);
-        copy(Con.adr, ConConst.adr);
+        setCnfg(servCnfg ,ENBL);
+        copy(*Con , ConConst );
         if(decr)
             iStart--;
         else
