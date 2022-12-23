@@ -56,33 +56,32 @@ typedef struct Polinom
 } Polinom;
 
 // --------------------------- обеспечивающие функции ------------------------------------------------------
-  void nullBitCnfg(BitConfiguration * cnfg);
-  void nullBitMap (uint8_t * cnfg); //для всех N_BIT_MAP
-  void nullSmbMap (uint16_t * cnfg); //для всех N_BIT_MAP
+  void nullBitCnfg (BitConfiguration cnfg); //для всех N_BIT_MAP
+  void nullSmbCnfg (SmbConfiguration cnfg); //для всех N_BIT_MAP
 
-  uint8_t rBit(uint8_t * str, uint8_t j); // j начинаем считать с первого, а не с 0-го |
-  uint8_t rSmb(const uint16_t * str, uint8_t j); // j начинаем считать с первого, а не с 0-го |
-  void    wBit(uint8_t * str, uint8_t j, uint8_t bit); //                              |
-  void    wSmb(uint16_t * str, uint8_t j, uint8_t smb); //
+  uint8_t rBit(const BitConfiguration str, uint8_t j); // j начинаем считать с первого, а не с 0-го
+  uint8_t rSmb(const SmbConfiguration str, uint8_t j); // j начинаем считать с первого, а не с 0-го
+  void wBit(BitConfiguration str, uint8_t j, uint8_t bit);
+  void wSmb(SmbConfiguration str, uint8_t j, uint8_t smb);
+
   void wSig(uint8_t * head, int8_t InSign);
   void wLeight(uint8_t * head, uint8_t InLeight);
   int8_t rSig(uint8_t head);
   uint8_t rLeight(uint8_t head);
 
-  void    wByte(uint8_t * str, uint8_t byte);//
+  void    wByte(uint8_t * str, uint8_t byte);
   uint8_t rByte(uint8_t * str);
-  void bitToSmb (uint8_t * bitCnfg, uint16_t * smbCnfg);//
-  void bitToSmb2 (uint8_t * bitCnfg, uint16_t * smbCnfg);
-  void setCnfg(uint8_t * bitCnfg, uint8_t EnOrDis);
-  _Bool wCnfg(uint8_t * bitCnfg, const uint8_t * charCnfg);
-  _Bool copy(uint8_t * cnfg1, const uint8_t * cnfg2);    //
+  void bitToSmb (BitConfiguration bitCnfg, SmbConfiguration smbCnfg);
+  void bitToSmb2 (BitConfiguration bitCnfg, SmbConfiguration smbCnfg);
+  void setCnfg(BitConfiguration bitCnfg, uint8_t EnOrDis);
+  _Bool copy(uint8_t * cnfg1, const uint8_t * cnfg2);
   _Bool copySmb(uint16_t * cnfg1, const uint16_t * cnfg2);
 
-  _Bool equl (float f1,float f2);                                      //
+  _Bool equl (float f1,float f2);
   _Bool aMoreB (float a, float b);
   //------ Эта функция вызывается при загрузке полинома из txt------------------
-  void polinom_init       (void * pPlnm, uint16_t nStr);
-  void PolinomInit       (Polinom * p_plnm);
+  void initPolinom (Polinom * inPlnm, uint16_t nStr);
+  void setLibPolinom  (Polinom * inPlnm);
 // -----------------------------------------------------------------------------
 
 // --------------------------- основные функции ------------------------------------------------------------                                                                      |
@@ -104,8 +103,8 @@ uint8_t findRandKsi(float * vec, uint8_t nEl);// начиная с 1
 //-------------------------------------------------------------------------------------
 //                               file loadpolinom.c
 //-------------------------------------------------------------------------------------
-uint32_t FindConfiguration(Polinom * STRUCTURE, BitConfiguration * ManyConf, uint8_t NumDev, uint8_t NumMode);
+uint32_t findConfiguration(Polinom * STRUCTURE, BitConfiguration * ManyConf, uint8_t NumDev, uint8_t NumMode);
 
-void LoadPlnmFromFile(char * PlnmFileName, Polinom * Polinom);
+void loadPlnmFromFile(char * PlnmFileName, Polinom * Polinom);
 
 #endif

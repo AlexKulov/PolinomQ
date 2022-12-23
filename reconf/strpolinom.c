@@ -6,184 +6,178 @@
 #include <stdio.h>
 
 //------------------------- ќЅ≈—ѕ≈„»¬јёў»≈ ‘”Ќ ÷»» ---------------------------
-void nullBitCnfg(BitConfiguration * cnfg)
-{
-   for(uint8_t i=0;i<N_BIT_MAP;i++)
-       //wByte(&cnfg->adr[i],0x00);
-       wByte(&((*cnfg)[i]),0x00);
+void nullBitCnfg (BitConfiguration cnfg){
+    for(uint8_t i=0;i<N_BIT_MAP;i++){
+        cnfg[i] = 0x00;
+    }
 }
 
-void nullBitMap (uint8_t * cnfg)
-{
-   for(uint8_t i=0;i<N_BIT_MAP;i++)
-       cnfg[i] = 0x00;
-}
-
-void nullSmbMap (uint16_t * cnfg)
-{
-   for(uint8_t i=0;i<N_BIT_MAP;i++)
+void nullSmbCnfg (SmbConfiguration cnfg){
+   for(uint8_t i=0;i<N_BIT_MAP;i++){
        cnfg[i] = 0x0000;
+   }
 }
 
-uint8_t rSmb(const uint16_t * str, uint8_t j) // начинаем считать с первого, а не с 0-го
-{
-  if(j>BIT_IN_BYTE*N_BIT_MAP || j<1){
-          printf("Err r_smb");
+uint8_t rBit(const BitConfiguration str, uint8_t j){ // начинаем считать с первого, а не с 0-го
+    if(j>BIT_IN_BYTE*N_BIT_MAP || j<1){
+        printf("Err r_bit\n");
+        // exit(1); дл€ отладки пусть так
+    }
+
+    for(uint8_t i=0;i<N_BIT_MAP;i++){
+        if(j == (1 + i*BIT_IN_BYTE)){
+            return str[i] & 0x01;
+        }else if(j == (2 + i*BIT_IN_BYTE)){
+            return (str[i]>>1) & 0x01;
+        }else if(j == (3 + i*BIT_IN_BYTE)){
+            return (str[i]>>2) & 0x01;
+        }else if(j == (4 + i*BIT_IN_BYTE)){
+            return (str[i]>>3) & 0x01;
+        }else if(j == (5 + i*BIT_IN_BYTE)){
+            return (str[i]>>4) & 0x01;
+        }else if(j == (6 + i*BIT_IN_BYTE)){
+            return (str[i]>>5) & 0x01;
+        }else if(j == (7 + i*BIT_IN_BYTE)){
+            return (str[i]>>6) & 0x01;
+        }else if(j == (8 + i*BIT_IN_BYTE)){
+            return (str[i]>>7) & 0x01;
+        }
+    }
+    return 0;
+}
+
+uint8_t rSmb(const SmbConfiguration str, uint8_t j){ // начинаем считать с первого, а не с 0-го
+    if(j>BIT_IN_BYTE*N_BIT_MAP || j<1){
+        printf("Err r_smb");
           // exit(1); дл€ отладки пусть так
-  }
+    }
 
-  for(uint8_t i=0;i<N_BIT_MAP;i++)
-  {
-     if(j == (1 + i*BIT_IN_BYTE))
-        return (str[i] & 0x0003);
-     else if(j == (2 + i*BIT_IN_BYTE))
-        return ((str[i] & 0x000c)>>2)&0x0003;
-     else if(j == (3 + i*BIT_IN_BYTE))
-        return ((str[i] & 0x0030)>>4)&0x0003;
-     else if(j == (4 + i*BIT_IN_BYTE))
-        return ((str[i] & 0x00c0)>>6)&0x0003;
-     else if(j == (5 + i*BIT_IN_BYTE))
-        return ((str[i] & 0x0300)>>8)&0x0003;
-     else if(j == (6 + i*BIT_IN_BYTE))
-        return ((str[i] & 0x0c00)>>10)&0x0003;
-     else if(j == (7 + i*BIT_IN_BYTE))
-        return ((str[i] & 0x3000)>>12)&0x0003;
-     else if(j == (8 + i*BIT_IN_BYTE))
-        return ((str[i] & 0xc000)>>14)&0x0003;
-  }
-  return 0;
+    for(uint8_t i=0;i<N_BIT_MAP;i++){
+        if(j == (1 + i*BIT_IN_BYTE))
+            return (str[i] & 0x0003);
+        else if(j == (2 + i*BIT_IN_BYTE))
+            return ((str[i] & 0x000c)>>2)&0x0003;
+        else if(j == (3 + i*BIT_IN_BYTE))
+            return ((str[i] & 0x0030)>>4)&0x0003;
+        else if(j == (4 + i*BIT_IN_BYTE))
+            return ((str[i] & 0x00c0)>>6)&0x0003;
+        else if(j == (5 + i*BIT_IN_BYTE))
+            return ((str[i] & 0x0300)>>8)&0x0003;
+        else if(j == (6 + i*BIT_IN_BYTE))
+            return ((str[i] & 0x0c00)>>10)&0x0003;
+        else if(j == (7 + i*BIT_IN_BYTE))
+            return ((str[i] & 0x3000)>>12)&0x0003;
+        else if(j == (8 + i*BIT_IN_BYTE))
+            return ((str[i] & 0xc000)>>14)&0x0003;
+    }
+    return 0;
 }
 
-uint8_t rBit(uint8_t * str, uint8_t j) // начинаем считать с первого, а не с 0-го
-{
-  if(j>BIT_IN_BYTE*N_BIT_MAP || j<1){
-          printf("Err r_bit\n");
-          // exit(1); дл€ отладки пусть так
-  }
-
-  for(uint8_t i=0;i<N_BIT_MAP;i++)
-  {
-     if(j == (1 + i*BIT_IN_BYTE))
-        return str[i] & 0x01;
-     else if(j == (2 + i*BIT_IN_BYTE))
-        return (str[i]>>1) & 0x01;
-     else if(j == (3 + i*BIT_IN_BYTE))
-        return (str[i]>>2) & 0x01;
-     else if(j == (4 + i*BIT_IN_BYTE))
-        return (str[i]>>3) & 0x01;
-     else if(j == (5 + i*BIT_IN_BYTE))
-        return (str[i]>>4) & 0x01;
-     else if(j == (6 + i*BIT_IN_BYTE))
-        return (str[i]>>5) & 0x01;
-     else if(j == (7 + i*BIT_IN_BYTE))
-        return (str[i]>>6) & 0x01;
-     else if(j == (8 + i*BIT_IN_BYTE))
-        return (str[i]>>7) & 0x01;
-  }
-  return 0;
-}
-
-void wBit(uint8_t * str, uint8_t j, uint8_t bit)
-{
-  if(j>BIT_IN_BYTE*N_BIT_MAP || j<1){
+void wBit(BitConfiguration str, uint8_t j, uint8_t bit){
+    if(j>BIT_IN_BYTE*N_BIT_MAP || j<1){
         printf("Err w_bit: j - incorrect\n");
         // exit(1); дл€ отладки пусть так
-  }
+    }
 
-  if(bit>1){
+    if(bit>1){
         printf("Err w_bit: bit - incorrect\n");
         // exit(1); дл€ отладки пусть так
-  }
+    }
 
-  if(j<=BIT_IN_BYTE*N_BIT_MAP && j>0)
-    for(uint8_t i=0;i<N_BIT_MAP;i++)
-    {
-     if(j == (1 + i*BIT_IN_BYTE))
-        {bit==1 ? (str[i] |= 0x01) : (str[i] &= ~0x01); break;}
-     else if (j == (2 + i*BIT_IN_BYTE))
-        {bit==1 ? (str[i] |= 0x02) : (str[i] &= ~0x02); break;}
-     else if (j == (3 + i*BIT_IN_BYTE))
-        {bit==1 ? (str[i] |= 0x04) : (str[i] &= ~0x04); break;}
-     else if (j == (4 + i*BIT_IN_BYTE))
-        {bit==1 ? (str[i] |= 0x08) : (str[i] &= ~0x08); break;}
-     else if (j == (5 + i*BIT_IN_BYTE))
-        {bit==1 ? (str[i] |= 0x10) : (str[i] &= ~0x10); break;}
-     else if (j == (6 + i*BIT_IN_BYTE))
-        {bit==1 ? (str[i] |= 0x20) : (str[i] &= ~0x20); break;}
-     else if (j == (7 + i*BIT_IN_BYTE))
-        {bit==1 ? (str[i] |= 0x40) : (str[i] &= ~0x40); break;}
-     else if (j == (8 + i*BIT_IN_BYTE))
-        {bit==1 ? (str[i] |= 0x80) : (str[i] &= ~0x80); break;}
+    if(j<=BIT_IN_BYTE*N_BIT_MAP && j>0){
+        for(uint8_t i=0;i<N_BIT_MAP;i++){
+            if(j == (1 + i*BIT_IN_BYTE)){
+                bit==1 ? (str[i] |= 0x01) : (str[i] &= ~0x01);break;
+            }else if (j == (2 + i*BIT_IN_BYTE)){
+                bit==1 ? (str[i] |= 0x02) : (str[i] &= ~0x02); break;
+            }else if (j == (3 + i*BIT_IN_BYTE)){
+                bit==1 ? (str[i] |= 0x04) : (str[i] &= ~0x04); break;
+            }else if (j == (4 + i*BIT_IN_BYTE)){
+                bit==1 ? (str[i] |= 0x08) : (str[i] &= ~0x08); break;
+            }else if (j == (5 + i*BIT_IN_BYTE)){
+                bit==1 ? (str[i] |= 0x10) : (str[i] &= ~0x10); break;
+            }else if (j == (6 + i*BIT_IN_BYTE)){
+                bit==1 ? (str[i] |= 0x20) : (str[i] &= ~0x20); break;
+            }else if (j == (7 + i*BIT_IN_BYTE)){
+                bit==1 ? (str[i] |= 0x40) : (str[i] &= ~0x40); break;
+            }else if (j == (8 + i*BIT_IN_BYTE)){
+                bit==1 ? (str[i] |= 0x80) : (str[i] &= ~0x80); break;
+            }
+        }
     }
 }
-void wSmb(uint16_t * str, uint8_t j, uint8_t smb)
-{
-  if(j==0){
+
+void wSmb(SmbConfiguration str, uint8_t j, uint8_t smb){
+    if(j==0){
         printf("Err w_smb: j - incorrect\n");
         // exit(1); дл€ отладки пусть так
-  }
+    }
 
-  if(smb>2){
+    if(smb>2){
         printf("Err w_smb: smb - incorrect\n");
         // exit(1); дл€ отладки пусть так
-  }
+    }
 
-  if(j<=BIT_IN_BYTE*N_BIT_MAP && j>0)
-    for(uint8_t i=0;i<N_BIT_MAP;i++)
-    {
-     if(j == (1 + i*BIT_IN_BYTE)){
-              if(1 == smb){str[i] |=  0x0001; str[i] &= ~0x0002;}
-         else if(0 == smb) str[i] &= ~0x0003;
-         else             {str[i] |=  0x0002; str[i] &= ~0x0001;}
-         break;
-     }
-     else if (j == (2 + i*BIT_IN_BYTE)){
-              if(1 == smb){str[i] |=  0x0004; str[i] &= ~0x0008;}
-         else if(0 == smb) str[i] &= ~0x000c;
-         else             {str[i] |=  0x0008; str[i] &= ~0x0004; }
-         break;
-     }
-     else if (j == (3 + i*BIT_IN_BYTE)){
-              if(1 == smb){str[i] |=  0x0010; str[i] &= ~0x0020;}
-         else if(0 == smb) str[i] &= ~0x0030;
-         else             {str[i] |=  0x0020; str[i] &= ~0x0010;}
-         break;
-     }
-     else if (j == (4 + i*BIT_IN_BYTE)){
-              if(1 == smb){str[i] |=  0x0040; str[i] &= ~0x0080;}
-         else if(0 == smb) str[i] &= ~0x00c0;
-         else             {str[i] |=  0x0080; str[i] &= ~0x0040;}
-         break;
-     }
-     else if (j == (5 + i*BIT_IN_BYTE)){
-              if(1 == smb){str[i] |=  0x0100;str[i] &= ~0x0200;}
-         else if(0 == smb) str[i] &= ~0x0300;
-         else             {str[i] |=  0x0200;str[i] &= ~0x0100;}
-         break;
-     }
-     else if (j == (6 + i*BIT_IN_BYTE)){
-              if(1 == smb){str[i] |=  0x0400; str[i] &= ~0x0800;}
-         else if(0 == smb) str[i] &= ~0x0c00;
-         else             {str[i] |=  0x0800; str[i] &= ~0x0400;}
-         break;
-     }
-     else if (j == (7 + i*BIT_IN_BYTE)){
-              if(1 == smb){str[i] |=  0x1000; str[i] &= ~0x2000;}
-         else if(0 == smb) str[i] &= ~0x3000;
-         else             {str[i] |=  0x2000; str[i] &= ~0x1000;}
-         break;
-     }
-     else if (j == (8 + i*BIT_IN_BYTE)){
-              if(1 == smb){str[i] |=  0x4000; str[i] &= ~0x8000;}
-         else if(0 == smb) str[i] &= ~0xc000;
-         else             {str[i] |=  0x8000; str[i] &= ~0x4000;}
-         break;
-     }
+    if(j<=BIT_IN_BYTE*N_BIT_MAP && j>0){
+        for(uint8_t i=0;i<N_BIT_MAP;i++){
+            if(j == (1 + i*BIT_IN_BYTE)){
+                if(1 == smb){
+                    str[i] |=  0x0001; str[i] &= ~0x0002;
+                }
+                else if(0 == smb){
+                    str[i] &= ~0x0003;
+                }else{
+                    str[i] |=  0x0002; str[i] &= ~0x0001;
+                }
+                break;
+            }
+            else if (j == (2 + i*BIT_IN_BYTE)){
+                if(1 == smb){str[i] |=  0x0004; str[i] &= ~0x0008;}
+                else if(0 == smb) str[i] &= ~0x000c;
+                else             {str[i] |=  0x0008; str[i] &= ~0x0004; }
+                break;
+            }
+            else if (j == (3 + i*BIT_IN_BYTE)){
+                if(1 == smb){str[i] |=  0x0010; str[i] &= ~0x0020;}
+                else if(0 == smb) str[i] &= ~0x0030;
+                else             {str[i] |=  0x0020; str[i] &= ~0x0010;}
+                break;
+            }
+            else if (j == (4 + i*BIT_IN_BYTE)){
+                if(1 == smb){str[i] |=  0x0040; str[i] &= ~0x0080;}
+                else if(0 == smb) str[i] &= ~0x00c0;
+                else             {str[i] |=  0x0080; str[i] &= ~0x0040;}
+                break;
+            }
+            else if (j == (5 + i*BIT_IN_BYTE)){
+                if(1 == smb){str[i] |=  0x0100;str[i] &= ~0x0200;}
+                else if(0 == smb) str[i] &= ~0x0300;
+                else             {str[i] |=  0x0200;str[i] &= ~0x0100;}
+                break;
+            }
+            else if (j == (6 + i*BIT_IN_BYTE)){
+                if(1 == smb){str[i] |=  0x0400; str[i] &= ~0x0800;}
+                else if(0 == smb) str[i] &= ~0x0c00;
+                else             {str[i] |=  0x0800; str[i] &= ~0x0400;}
+                break;
+            }
+            else if (j == (7 + i*BIT_IN_BYTE)){
+                if(1 == smb){str[i] |=  0x1000; str[i] &= ~0x2000;}
+                else if(0 == smb) str[i] &= ~0x3000;
+                else             {str[i] |=  0x2000; str[i] &= ~0x1000;}
+                break;
+            }
+            else if (j == (8 + i*BIT_IN_BYTE)){
+                if(1 == smb){str[i] |=  0x4000; str[i] &= ~0x8000;}
+                else if(0 == smb) str[i] &= ~0xc000;
+                else             {str[i] |=  0x8000; str[i] &= ~0x4000;}
+                break;
+            }
+        }
     }
 }
 
-int8_t rSig(uint8_t head)
-{
+int8_t rSig(uint8_t head){
     uint8_t Sign = head & 0x03;
     if(0x03 == Sign)
         return -1;
@@ -196,14 +190,12 @@ int8_t rSig(uint8_t head)
     }
 }
 
-uint8_t rLeight(uint8_t head)
-{
+uint8_t rLeight(uint8_t head){
     uint8_t Leight = (head>>2) & 0x3f;
     return Leight;
 }
 
-void wSig(uint8_t * head, int8_t inSign)
-{
+void wSig(uint8_t * head, int8_t inSign){
     if(!(-1 == inSign || 1 == inSign)){
           printf("Err w_sig: InSign - incorrect\n");
           // exit(1); дл€ отладки пусть так
@@ -219,8 +211,7 @@ void wSig(uint8_t * head, int8_t inSign)
     }
 }
 
-void wLeight(uint8_t * head, uint8_t inLeight)
-{
+void wLeight(uint8_t * head, uint8_t inLeight){
     if(inLeight>0x3f){
           printf("Err wLeight: InLeight - incorrect\n");
           // exit(1); дл€ отладки пусть так
@@ -237,18 +228,16 @@ void wLeight(uint8_t * head, uint8_t inLeight)
     }
 }
 
-void wByte(uint8_t * str, uint8_t byte)
-{
-    if(str == 0){
+void wByte(uint8_t * str, uint8_t byte){
+    if(str == NULL){
         printf("Err w_byte\n");
         //exit(1);
     }
     * str = byte;
 }
 
-uint8_t rByte(uint8_t * str)
-{
-    if(str == 0){
+uint8_t rByte(uint8_t * str){
+    if(str == NULL){
         printf("Err r_byte\n");
         //exit(1);
     }
@@ -256,107 +245,96 @@ uint8_t rByte(uint8_t * str)
     return resByte;
 }
 
-_Bool wCnfg(uint8_t * bitCnfg, const uint8_t * charCnfg)
-{
-  for(uint8_t i=0;i<N_BIT_MAP;i++)
-        wByte(&bitCnfg[i], charCnfg[i]);
-  return 0;
-}
-
-_Bool copy(uint8_t * cnfg1, const uint8_t * cnfg2)
-{
-  for(uint8_t i=0;i<N_BIT_MAP;i++)
+_Bool copy(uint8_t * cnfg1, const uint8_t * cnfg2){
+    for(uint8_t i=0;i<N_BIT_MAP;i++){
         cnfg1[i] = cnfg2[i];
-  return 0;
+    }
+    return 0;
 }
 
-_Bool copySmb(uint16_t * cnfg1, const uint16_t * cnfg2)
-{
-  for(uint8_t i=0;i<N_BIT_MAP;i++)
+_Bool copySmb(uint16_t * cnfg1, const uint16_t * cnfg2){
+    for(uint8_t i=0;i<N_BIT_MAP;i++){
         cnfg1[i] = cnfg2[i];
-  return 0;
+    }
+    return 0;
 }
 
-void bitToSmb (uint8_t * bitCnfg, uint16_t * smbCnfg)
-{
+void bitToSmb (BitConfiguration bitCnfg, SmbConfiguration smbCnfg){
     for(uint8_t i=1; i<=N_EL_MAX;i++){
-        if(rBit(bitCnfg,i) == 1)
-           wSmb(smbCnfg,i,NORM);
-        else
-           wSmb(smbCnfg,i,DOWN);
+        if(rBit(bitCnfg,i) == 1){
+            wSmb(smbCnfg,i,NORM);
+        }else{
+            wSmb(smbCnfg,i,DOWN);
+        }
     }
 }
 
-void bitToSmb2 (uint8_t * bitCnfg, uint16_t * smbCnfg)
-{
-    for(uint8_t i=1; i<=N_EL_MAX;i++)
-        if(rBit(bitCnfg,i) == P)
-           wSmb(smbCnfg,i,UP);
-        else
-           wSmb(smbCnfg,i,DOWN);
+void bitToSmb2 (BitConfiguration bitCnfg, SmbConfiguration smbCnfg){
+    for(uint8_t i=1; i<=N_EL_MAX;i++){
+        if(rBit(bitCnfg,i) == P){
+            wSmb(smbCnfg,i,UP);
+        }else{
+            wSmb(smbCnfg,i,DOWN);
+        }
+    }
 }
 
-void setCnfg(uint8_t * bitCnfg, uint8_t enOrDis)
-{
+void setCnfg(BitConfiguration bitCnfg, uint8_t enOrDis){
     if(ENBL == enOrDis){
         for(uint8_t i=0;i<N_BIT_MAP;i++)
-              wByte(&bitCnfg[i], 0xff);
+            wByte(&bitCnfg[i], 0xff);
     }
     else if (DISBL == enOrDis) {
         for(uint8_t i=0;i<N_BIT_MAP;i++)
-              wByte(&bitCnfg[i], 0x00);
+            wByte(&bitCnfg[i], 0x00);
     }
 }
 
-Polinom * plnm; //
+static Polinom * plnm; //
 //-------------------------------- ќ—Ќќ¬Ќџ≈ ‘”Ќ ÷»» -------------------------------
-void PolinomInit       (Polinom * p_plnm)
-{
-    plnm  = (Polinom *) p_plnm;
+void setLibPolinom (Polinom * inPlnm){ //polinomInit
+    if(inPlnm == NULL){
+        printf("setLibPolinom error : inPlnm = NULL \n");
+        return;
+    }
+    plnm  = inPlnm;
 }
 
-void polinom_init       (void * pPlnm, uint16_t nStr)
-{
-  plnm  = (Polinom *) pPlnm;
-  plnm->nStr = nStr;
-  for(uint16_t i=0; i<plnm->nStr; i++)
-  {
-    wSig(&plnm->strings[i].head, 1);
-    wLeight(&plnm->strings[i].head, 0);
-    for(uint8_t j=1; j<=N_EL_MAX; j++)
-    {
-      wBit(plnm->strings[i].existPQ,j,FALSE);
-      wBit(plnm->strings[i].pq,j,Q);
+void initPolinom (Polinom * inPlnm, uint16_t nStr){
+    plnm  = inPlnm;
+    plnm->nStr = nStr;
+    for(uint16_t i=0; i<plnm->nStr; i++){
+        wSig(&plnm->strings[i].head, 1);
+        wLeight(&plnm->strings[i].head, 0);
+        for(uint8_t j=1; j<=N_EL_MAX; j++){
+            wBit(plnm->strings[i].existPQ,j,FALSE);
+            wBit(plnm->strings[i].pq,j,Q);
+        }
     }
-  }
 }
 
 //------------------------------- ќЅ≈—ѕ. ‘”Ќ ÷»я ---------------------------------
-float culcStrP(PolinomString * str, uint16_t * workCnfg)
-{
-  float pStrRes = 1.0;
-  uint8_t k=0;
+float culcStrP(PolinomString * str, uint16_t * workCnfg){
+    float pStrRes = 1.0;
+    uint8_t k=0;
 
-  for(uint8_t i=1;i<=N_EL_MAX;i++)
-  {
-     if(rBit(str->existPQ,i)) // может быть три варианта в зависимости от bit_work_conf[i] и p_or_q
-     {
-       if(rSmb(workCnfg, i) == NORM)
-            pStrRes=pStrRes * 0.5f;
-       else if(rSmb(workCnfg, i) == DOWN && rBit(str->pq,i) == P)
-		   return 0.0;
-       else if(rSmb(workCnfg, i) == UP   && rBit(str->pq,i) == Q)
-		   return 0.0;
-       k++;
-     }
-     if(k >= rLeight(str->head))
-       return pStrRes;
-  }
-  return pStrRes;
+    for(uint8_t i=1;i<=N_EL_MAX;i++){
+         if(rBit(str->existPQ,i)){ // может быть три варианта в зависимости от bit_work_conf[i] и p_or_q
+            if(rSmb(workCnfg, i) == NORM)
+                pStrRes=pStrRes * 0.5f;
+            else if(rSmb(workCnfg, i) == DOWN && rBit(str->pq,i) == P)
+                return 0.0;
+            else if(rSmb(workCnfg, i) == UP   && rBit(str->pq,i) == Q)
+                return 0.0;
+            k++;
+        }
+        if(k >= rLeight(str->head))
+            return pStrRes;
+    }
+    return pStrRes;
 }
 //-----------------------------------------------------------------------------------
-float culcP    (uint16_t * workCnfg)
-{
+float culcP    (uint16_t * workCnfg){
     float pRes = 0.0;
     for(uint16_t i=0; i<plnm->nStr; i++){
         if(rSig(plnm->strings[i].head) == 1)
@@ -368,104 +346,98 @@ float culcP    (uint16_t * workCnfg)
 }
 
 //------------------------------- ќЅ≈—ѕ. ‘”Ќ ÷»я ---------------------------------
-double culcStrPt(PolinomString * str, double * elPt)
-{
-   double pStrRes = 1.0;
-   uint8_t k=0;
+double culcStrPt(PolinomString * str, double * elPt){
+    double pStrRes = 1.0;
+    uint8_t k=0;
 
-   for(uint8_t i=1;i<=plnm->nEl;i++){
-      if(rBit(str->existPQ,i))
-      {
-        if(rBit(str->pq,i) == P)
+    for(uint8_t i=1;i<=plnm->nEl;i++){
+        if(rBit(str->existPQ,i)){
+            if(rBit(str->pq,i) == P)
                 pStrRes=pStrRes*elPt[i-1];
-        else if(rBit(str->pq,i) == Q)
+            else if(rBit(str->pq,i) == Q)
                 pStrRes=pStrRes*(1.0-elPt[i-1]);
-        k++;
-      }
-      if(k >= rLeight(str->head) )
-        return pStrRes;
-   }
-   return pStrRes;
+            k++;
+        }
+        if(k >= rLeight(str->head) )
+            return pStrRes;
+    }
+    return pStrRes;
 }
 
-double culcPt  (double * elPt)
-{
+double culcPt  (double * elPt){
     double pRes = 0.0;
 
     for(uint16_t i=0; i<plnm->nStr; i++){
         if(rSig(plnm->strings[i].head) == 1)
-                pRes = pRes + culcStrPt(&(plnm->strings[i]), elPt);
+            pRes = pRes + culcStrPt(&(plnm->strings[i]), elPt);
         else if(rSig(plnm->strings[i].head) == -1)
-                pRes = pRes - culcStrPt(&(plnm->strings[i]), elPt);
+            pRes = pRes - culcStrPt(&(plnm->strings[i]), elPt);
     }
     return pRes;
 }
 
-float culcKsi      (uint16_t * workCnfg, uint8_t j, typeKsi type)
-{
-      float ksi = 0.0;
-      if(j>plnm->nEl)
-         return -2.0; // ошибка, j задана некорректно
-
-      if(type == NEGATIV){
-             ksi = culcP(workCnfg);
-             wSmb(workCnfg, j,DOWN);
-             ksi = ksi - culcP(workCnfg);
-             wSmb(workCnfg, j,NORM);
-             return ksi;
-      }
-      else if(type == POSITIV){
-             wSmb(workCnfg, j,UP);
-             ksi = culcP(workCnfg);
-             wSmb(workCnfg, j,NORM);
-             ksi = ksi - culcP(workCnfg);
-             return ksi;
-      }
-      else if(type == FULL){
-             wSmb(workCnfg, j,UP);
-             ksi = culcP(workCnfg);
-             wSmb(workCnfg, j,DOWN);
-             ksi = ksi - culcP(workCnfg);
-             wSmb(workCnfg, j,NORM);
-             return ksi;
-      }
-      return 0.0;
+float culcKsi      (uint16_t * workCnfg, uint8_t j, typeKsi type){
+    float ksi = 0.0;
+    if(j>plnm->nEl){
+        return -2.0; // ошибка, j задана некорректно
+    }
+    if(type == NEGATIV){
+        ksi = culcP(workCnfg);
+        wSmb(workCnfg, j,DOWN);
+        ksi = ksi - culcP(workCnfg);
+        wSmb(workCnfg, j,NORM);
+        return ksi;
+    }
+    else if(type == POSITIV){
+        wSmb(workCnfg, j,UP);
+        ksi = culcP(workCnfg);
+        wSmb(workCnfg, j,NORM);
+        ksi = ksi - culcP(workCnfg);
+        return ksi;
+    }
+    else if(type == FULL){
+        wSmb(workCnfg, j,UP);
+        ksi = culcP(workCnfg);
+        wSmb(workCnfg, j,DOWN);
+        ksi = ksi - culcP(workCnfg);
+        wSmb(workCnfg, j,NORM);
+        return ksi;
+    }
+    return 0.0;
 }
 // договоримс€ что кси которые не надо вычисл€ть будут заданы значени€ми 2 и -2 в зависимости от
 // работоспособен этот элемент или уже включен в конфигурацию
-void culcAllKsi  (uint16_t * workCnfg, float * allKsi, typeKsi type)
-{
-    for(uint8_t i=1;i<=plnm->nEl;i++) // i должны начинатьс€ с 1 и до n_el включительно
-    {
-       if(rSmb(workCnfg, i) == NORM)
-         allKsi[i-1] = culcKsi(workCnfg, i, type);
-       else if(rSmb(workCnfg, i) == DOWN)
-         allKsi[i-1] = -2.0;
-       else if(rSmb(workCnfg, i) == UP)
-         allKsi[i-1] = 2.0;
+void culcAllKsi  (uint16_t * workCnfg, float * allKsi, typeKsi type){
+    for(uint8_t i=1;i<=plnm->nEl;i++){ // i должны начинатьс€ с 1 и до n_el включительно
+        if(rSmb(workCnfg, i) == NORM){
+            allKsi[i-1] = culcKsi(workCnfg, i, type);
+        }else if(rSmb(workCnfg, i) == DOWN){
+            allKsi[i-1] = -2.0;
+        }else if(rSmb(workCnfg, i) == UP){
+            allKsi[i-1] = 2.0;
+        }
     }
 }
 
 #define EQUL_ZONE (5E-7f)
 
-_Bool equl(float f1,float f2)
-{
-   float mF = (f1+f2)/2.0f;
-   if(f1>= (mF - EQUL_ZONE) &&  f1<= (mF + EQUL_ZONE) &&
-      f2>= (mF - EQUL_ZONE) &&  f2<= (mF + EQUL_ZONE))
-      return TRUE;
-   else
-      return FALSE;
+_Bool equl(float f1,float f2){
+    float mF = (f1+f2)/2.0f;
+    if(f1>= (mF - EQUL_ZONE) &&  f1<= (mF + EQUL_ZONE) &&
+       f2>= (mF - EQUL_ZONE) &&  f2<= (mF + EQUL_ZONE)){
+        return TRUE;
+    }else{
+        return FALSE;
+    }
 }
 
-_Bool aMoreB (float a, float b) //т.е b< а <= b+eps
-{
+_Bool aMoreB (float a, float b){ //т.е b< а <= b+eps
     float a_b = a - b;
-
-    if(a_b>EQUL_ZONE)
+    if(a_b>EQUL_ZONE){
         return TRUE;
-    else
+    }else{
         return FALSE;
+    }
 }
 
 uint8_t findMaxKsi(float * vec, uint16_t * cnfg, uint8_t * manyMax){

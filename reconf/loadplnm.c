@@ -169,18 +169,18 @@ uint16_t  loadPlnmFromMsg (PlnmToSend * mko_send, Polinom * plnm, uint16_t l_str
   return  nSw;
 }
 
-void LoadPlnmFromFile(char * PlnmFileName, Polinom * Polinom)
+void loadPlnmFromFile(char * PlnmFileName, Polinom * polinom)
 {
-    FILE * FilePolinom;
-    FilePolinom=fopen(PlnmFileName,"r");
-    if (FilePolinom!=NULL){
+    FILE * filePolinom;
+    filePolinom=fopen(PlnmFileName,"r");
+    if (filePolinom!=NULL){
         uint16_t CntStr = 0; //number of string in Polinom
         char FailSmb;
         char StrRd[4*N_EL_MAX];
         uint16_t i;
 
         for(i=0;i<N_STR_MAX;i++){
-            if(EOF == fscanf(FilePolinom,"%[^\n] %[\n]",StrRd,&FailSmb))
+            if(EOF == fscanf(filePolinom,"%[^\n] %[\n]",StrRd,&FailSmb))
                 break;
             CntStr++;
         }
@@ -195,15 +195,15 @@ void LoadPlnmFromFile(char * PlnmFileName, Polinom * Polinom)
         uint8_t index_pq = 0; //index_PQ
         uint8_t nEl = 0; //максимальный номер элемента
         uint8_t k,j;
-        polinom_init((void*)/*&*/Polinom, CntStr);
-        rewind(FilePolinom);
+        initPolinom(polinom, CntStr);
+        rewind(filePolinom);
 
         for (uint16_t iStr=0; iStr<CntStr; iStr++){
             nmb_symb_end = 0;
             nmb_symb_beg = 0;
             pq_symb_cur = 0;
             flag_frst = TRUE;
-            fscanf(FilePolinom,"%[^\n] %[\n]",StrRd,&FailSmb);
+            fscanf(filePolinom,"%[^\n] %[\n]",StrRd,&FailSmb);
             str_lng_cur = 0;
             for (i=0;i<4*N_EL_MAX;i++) {
                if(StrRd[i] == 0)
@@ -211,15 +211,15 @@ void LoadPlnmFromFile(char * PlnmFileName, Polinom * Polinom)
                str_lng_cur++;
             }
       //проверяем первые 6 символов на знак строки, пусть по умолчанию +
-            wSig(&Polinom->strings[iStr].head, 1);
+            wSig(&polinom->strings[iStr].head, 1);
             for (k=0; k<=SMB_FOR_SIG; k++){
                 if (StrRd[k] == '+'){
-                    wSig(&Polinom->strings[iStr].head, 1);
+                    wSig(&polinom->strings[iStr].head, 1);
                     break;
                 }
 
                 if (StrRd[k] == '-'){
-                    wSig(&Polinom->strings[iStr].head, -1);
+                    wSig(&polinom->strings[iStr].head, -1);
                     break;
                 }
             }
@@ -245,10 +245,10 @@ void LoadPlnmFromFile(char * PlnmFileName, Polinom * Polinom)
                     index_pq = (uint8_t)atoi(Nomer);
                     nmb_symb_beg--;
                     if (StrRd[nmb_symb_beg] == 'P')
-                        wBit (Polinom->strings[iStr].pq, index_pq, P);
+                        wBit (polinom->strings[iStr].pq, index_pq, P);
                     else if (StrRd[nmb_symb_beg] == 'Q')
-                        wBit (Polinom->strings[iStr].pq, index_pq, Q);
-                    wBit (Polinom->strings[iStr].existPQ, index_pq, TRUE); // записываем биты существования
+                        wBit (polinom->strings[iStr].pq, index_pq, Q);
+                    wBit (polinom->strings[iStr].existPQ, index_pq, TRUE); // записываем биты существования
                     nmb_symb_beg = nmb_symb_end;
                     count_smb_in_str++;
                     if(index_pq > nEl)
@@ -273,24 +273,24 @@ void LoadPlnmFromFile(char * PlnmFileName, Polinom * Polinom)
 
            nmb_symb_beg--;
            if (StrRd[nmb_symb_beg] == 'P')
-               wBit (Polinom->strings[iStr].pq, index_pq, P);
+               wBit (polinom->strings[iStr].pq, index_pq, P);
            else if (StrRd[nmb_symb_beg] == 'Q')
-               wBit (Polinom->strings[iStr].pq, index_pq, Q);
-           wBit (Polinom->strings[iStr].existPQ, index_pq, TRUE); // записываем последний бит существования
+               wBit (polinom->strings[iStr].pq, index_pq, Q);
+           wBit (polinom->strings[iStr].existPQ, index_pq, TRUE); // записываем последний бит существования
            count_smb_in_str++;
-           wLeight(&Polinom->strings[iStr].head, count_smb_in_str);
+           wLeight(&polinom->strings[iStr].head, count_smb_in_str);
            count_smb_in_str=0;
            if(index_pq > nEl)
               nEl =  index_pq;
      }
-     Polinom->nEl = nEl;
+     polinom->nEl = nEl;
    }
-   fclose(FilePolinom);
+   fclose(filePolinom);
 }
 
 #define MAX_MODE 10
 
-uint32_t FindConfiguration(Polinom * STRUCTURE, BitConfiguration * ManyConf, uint8_t NumDev, uint8_t NumMode)
+uint32_t findConfiguration(Polinom * polinom, BitConfiguration * ManyConf, uint8_t NumDev, uint8_t NumMode)
 {
 
      float KsiEl[N_EL_MAX];
@@ -299,11 +299,11 @@ uint32_t FindConfiguration(Polinom * STRUCTURE, BitConfiguration * ManyConf, uin
      uint16_t  smb_of_str[N_BIT_MAP];
      uint16_t smb_for_chc[N_BIT_MAP];
 
-     nullBitMap(   p_of_str);
+     nullBitCnfg(   p_of_str);
      for(uint8_t j=0;j<MAX_MODE;j++)
-        nullBitMap(&conf_of_str[j][0]);
-     nullSmbMap(smb_of_str);
-     nullSmbMap(smb_for_chc);
+        nullBitCnfg(&conf_of_str[j][0]);
+     nullSmbCnfg(smb_of_str);
+     nullSmbCnfg(smb_for_chc);
 
 
      _Bool tmb_conf_same = TRUE;
@@ -312,12 +312,12 @@ uint32_t FindConfiguration(Polinom * STRUCTURE, BitConfiguration * ManyConf, uin
 
      uint8_t cur = 0;//������� ������������ � ������
 
-     for(uint16_t i=0;i<STRUCTURE->nStr;i++){
-        if(rSig(STRUCTURE->strings[i].head) == 1){
+     for(uint16_t i=0;i<polinom->nStr;i++){
+        if(rSig(polinom->strings[i].head) == 1){
 
              for(uint8_t j=1;j<=NumDev;j++)
-                 if(rBit(STRUCTURE->strings[i].existPQ,j) &&
-                    rBit(STRUCTURE->strings[i].pq  ,j) == P){
+                 if(rBit(polinom->strings[i].existPQ,j) &&
+                    rBit(polinom->strings[i].pq  ,j) == P){
                       wBit(p_of_str,j,1);
                       wSmb(smb_of_str,j,NORM);
                  }
@@ -328,8 +328,8 @@ uint32_t FindConfiguration(Polinom * STRUCTURE, BitConfiguration * ManyConf, uin
             ///*
              for(uint8_t j=NumDev+1;j<=NumDev+NumMode;j++){
                  wSmb(smb_of_str,j,UP);
-                 if(rBit(STRUCTURE->strings[i].existPQ,j) &&
-                    rBit(STRUCTURE->strings[i].pq  ,j) == P)
+                 if(rBit(polinom->strings[i].existPQ,j) &&
+                    rBit(polinom->strings[i].pq  ,j) == P)
                       wBit(p_of_str,j,1);
                  else
                       wBit(p_of_str,j,0);
@@ -394,14 +394,14 @@ uint32_t FindConfiguration(Polinom * STRUCTURE, BitConfiguration * ManyConf, uin
                 cur++;
              }//
 
-             nullBitMap(p_of_str);
-             nullSmbMap(smb_of_str);
+             nullBitCnfg(p_of_str);
+             nullSmbCnfg(smb_of_str);
                 //2. �������� �� ��������
 
              for(uint16_t c=0;c<cur;c++){
                 for(uint16_t k=0;k<num_rec;k++){
                         tmb_conf_same = TRUE;
-                        for(uint8_t j=1;j<=STRUCTURE->nEl;j++){
+                        for(uint8_t j=1;j<=polinom->nEl;j++){
                                 if(rBit(conf_of_str[c],j) != rBit(ManyConf[k] ,j)){
                                         tmb_conf_same = FALSE;
                                         break;
@@ -416,7 +416,7 @@ uint32_t FindConfiguration(Polinom * STRUCTURE, BitConfiguration * ManyConf, uin
                         copy(ManyConf[num_rec] ,conf_of_str[c]);
                                num_rec++;
                 }
-                nullBitMap(conf_of_str[c]);
+                nullBitCnfg(conf_of_str[c]);
 
              }//for(c...cur)
         }

@@ -1,6 +1,7 @@
 #include "reconf/reconfiguration.h"
 
 #include <stdio.h>
+#include <string.h>
 
 void showCnfg(BitConfiguration cnfgIn,unsigned char nEl){
     printf("\n Cnfg : ");
@@ -24,7 +25,17 @@ int main(int argc, char *argv[])
     unsigned char Elements  =17;
     unsigned char Mode = 3;
 
-    Con = initFswRcnf(Elements,Mode); //10 - элементов, 4 - режима
+    char polinomName[127];
+    if(argc == 1){
+        strcpy(polinomName,"polynom/Neuro.txt");
+    }else if(argc == 2){
+        strcpy(polinomName,argv[1]);
+    }else{
+        printf("Please, next time add input parameters for programm \n");
+        return -1;
+    }
+
+    Con = initFswRcnf(polinomName,Elements,Mode); //10 - элементов, 4 - режима
     copy(ConConst,*Con);
     showCnfg(*Con,Elements+Mode);
 

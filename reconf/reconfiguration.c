@@ -73,7 +73,7 @@ uint32_t randGnrtCnfg(BitConfiguration servCnfg){
     float vecKsi[N_EL_MAX]; //N_EL_MAX
     uint8_t stepChoice = 0;
     for(uint16_t iCnfg=0;iCnfg<maxCnfgRnd;iCnfg++){
-        nullBitCnfg(&manyCnfg[iCnfg]);
+        nullBitCnfg(manyCnfg[iCnfg]);
     }
 
     uint32_t resNumCnfg=0;
@@ -274,11 +274,11 @@ void initFswRcnf1(BitConfiguration * initC, uint8_t Elements, uint8_t Modes)
 
     char NamePolinomFile[128] = "polynom/PolEk.txt";
     // char NamePolinomFile[128] = "SimplePol.txt";
-    LoadPlnmFromFile(NamePolinomFile,&scPolinim);
-    PolinomInit(&scPolinim);
+    loadPlnmFromFile(NamePolinomFile,&scPolinim);
+    setLibPolinom(&scPolinim);
     flagAlgReCnfg = ALG_FULL_ENUM;
     if(ALG_FULL_ENUM == flagAlgReCnfg){
-        maxInAllCnfg = FindConfiguration(&scPolinim, allCnfg, numOnboardDevice, numMode);
+        maxInAllCnfg = findConfiguration(&scPolinim, allCnfg, numOnboardDevice, numMode);
         for(uint32_t i=0;i<maxInAllCnfg;i++){
                         printf("Cnfg No(%i) : ",i+1);
                         for(uint8_t j=1;j<=numOnboardDevice+numMode;j++){
@@ -303,7 +303,7 @@ void initFswRcnf1(BitConfiguration * initC, uint8_t Elements, uint8_t Modes)
     copy(*initC,cOn);
 }
 
-BitConfiguration * initFswRcnf(uint8_t elements, uint8_t modes)
+BitConfiguration * initFswRcnf(char * namePolinomFile, uint8_t elements, uint8_t modes)
 {
     wByte(&exctMode,CNFG_ALL_MODE_TEST);
     numOnboardDevice = elements; //4Gyro+2Fss+2St+2Mag+4Whl+3Mtb = 17
@@ -311,13 +311,13 @@ BitConfiguration * initFswRcnf(uint8_t elements, uint8_t modes)
     sumExctMode = numMode;
     maxCnfgRnd = 10; //пусть будет столько пока 3.03.2022
 
-    char NamePolinomFile[128] = "polynom/PolEk.txt";
-    // char NamePolinomFile[128] = "SimplePol.txt";
-    LoadPlnmFromFile(NamePolinomFile,&scPolinim);
-    PolinomInit(&scPolinim);
+    //char NamePolinomFile[128] = "polynom/PolEk.txt";
+
+    loadPlnmFromFile(namePolinomFile,&scPolinim);
+    setLibPolinom(&scPolinim);
     flagAlgReCnfg = ALG_FULL_ENUM;
     if(ALG_FULL_ENUM == flagAlgReCnfg){
-        maxInAllCnfg = FindConfiguration(&scPolinim, allCnfg, numOnboardDevice, numMode);
+        maxInAllCnfg = findConfiguration(&scPolinim, allCnfg, numOnboardDevice, numMode);
         for(uint32_t i=0;i<maxInAllCnfg;i++){
                         printf("Cnfg No(%i) : ",i+1);
                         for(uint8_t j=1;j<=numOnboardDevice+numMode;j++){
