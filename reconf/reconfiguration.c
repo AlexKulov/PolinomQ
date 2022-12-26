@@ -1,5 +1,5 @@
-#include <stdio.h>
 #include "reconfiguration.h"
+#include <stdio.h>
 
 #define CNFG_ALL_MODE_TEST 0x0f
 //#define CNFG_ALL_MODE 0x07
@@ -9,353 +9,345 @@
 #define ALG_FULL_ENUM 1
 #define ALG_RAND_RSCH 2
 
-#ifndef NAME_SPACE
+/* #ifndef NAME_SPACE
     #define STATIC static
 #else
     #define STATIC
-#endif
+#endif */
 
 //namespace ValFswRcnf{
-   STATIC polinom ScPolinim;
-   STATIC bit_configuration Con; // now execute  device
-   STATIC float Tcur[N_EL_MAX];
-   STATIC float Tmax[N_EL_MAX];
-   STATIC uint8_t NumOnboardDevice, NumMode;
-   STATIC uint8_t ExctMode;
-   STATIC long SumExctMode;
-   STATIC long FlagAlgReCnfg;
-   STATIC long MaxCnfgRnd;
-   STATIC uint32_t MaxInAllCnfg;
-   bit_configuration AllCnfg[N_STR_MAX];
-   STATIC bit_configuration ManyCnfg[N_STR_MAX];
-   STATIC bit_configuration ManyCnfgForMode[ON_ALL_MODE][N_STR_MAX];
+   static Polinom scPolinim;
+   static BitConfiguration cOn; // now execute  device
+   static float tCur[N_EL_MAX];
+   static float tMax[N_EL_MAX];
+   static uint8_t numOnboardDevice, numMode;
+   static uint8_t exctMode;
+   static long sumExctMode;
+   static long flagAlgReCnfg;
+   static long maxCnfgRnd;
+   static uint32_t maxInAllCnfg;
+   static BitConfiguration allCnfg[N_STR_MAX];
+   static BitConfiguration manyCnfg[N_STR_MAX];
+   static BitConfiguration manyCnfgForMode[ON_ALL_MODE][N_STR_MAX];
 //}
 
-void FormExctMode(bit_configuration Cserv)
-{
-    bit_configuration CnfgOneMode;
-    copy(CnfgOneMode.adr, Cserv.adr);
+void formExctMode(BitConfiguration servCnfg){
+    BitConfiguration cnfgOneMode;
+    copy(cnfgOneMode, servCnfg);
     uint8_t iMode=0;
-    for(iMode=NumOnboardDevice+1;iMode<=(NumOnboardDevice+NumMode);iMode++){
-        w_bit(CnfgOneMode.adr,iMode,ENBL);
+    for(iMode=numOnboardDevice+1;iMode<=(numOnboardDevice+numMode);iMode++){
+        wBit(cnfgOneMode,iMode,ENBL);
     }
-    smb_configuration SmbCnfgOneMode;
-    SumExctMode = 0;
-    for (iMode=NumOnboardDevice+1;iMode<=(NumOnboardDevice+NumMode);iMode++){
-        w_bit(CnfgOneMode.adr,iMode,DISBL);
-        BitToSmb2(CnfgOneMode.adr,SmbCnfgOneMode.adr);
-        if(culc_p(SmbCnfgOneMode.adr)>0.0f){
-            w_bit(&ExctMode,iMode-NumOnboardDevice,ENBL);
-            SumExctMode++;
+    SmbConfiguration smbCnfgOneMode;
+    sumExctMode = 0;
+    for (iMode=numOnboardDevice+1;iMode<=(numOnboardDevice+numMode);iMode++){
+        wBit(cnfgOneMode,iMode,DISBL);
+        bitToSmb2(cnfgOneMode,smbCnfgOneMode);
+        if(culcP(smbCnfgOneMode)>0.0f){
+            wBit(&exctMode,iMode-numOnboardDevice,ENBL);
+            sumExctMode++;
         }
         else
-            w_bit(&ExctMode,iMode-NumOnboardDevice,DISBL);
-        w_bit(CnfgOneMode.adr,iMode,ENBL);
+            wBit(&exctMode,iMode-numOnboardDevice,DISBL);
+        wBit(cnfgOneMode,iMode,ENBL);
     }
 }
 
-uint32_t RandGnrtCnfg(bit_configuration Cserv){
-
+uint32_t randGnrtCnfg(BitConfiguration servCnfg){
     float testP=0.f;
-    smb_configuration SmbCnfgStart;
-    bit_to_smb(Cserv.adr,SmbCnfgStart.adr);
+    SmbConfiguration smbCnfgStart;
+    bitToSmb(servCnfg,smbCnfgStart);
     uint8_t iMode=0;
-    for(iMode=NumOnboardDevice+1;iMode<=NumOnboardDevice+NumMode;iMode++)
-        if(ENBL == r_bit(&ExctMode,iMode-NumOnboardDevice)){
-            w_smb(SmbCnfgStart.adr,iMode,DOWN);
-            w_bit(Cserv.adr,iMode,DISBL); //27.02.2022
+    for(iMode=numOnboardDevice+1;iMode<=numOnboardDevice+numMode;iMode++)
+        if(ENBL == rBit(&exctMode,iMode-numOnboardDevice)){
+            wSmb(smbCnfgStart,iMode,DOWN);
+            wBit(servCnfg,iMode,DISBL); //27.02.2022
         }
         else{ //23.03.2022
-            w_smb(SmbCnfgStart.adr,iMode,UP); //23.03.2022
-            w_bit(Cserv.adr,iMode,ENBL); //23.03.2022
+            wSmb(smbCnfgStart,iMode,UP); //23.03.2022
+            wBit(servCnfg,iMode,ENBL); //23.03.2022
         }
 
-    float VecKsi[N_EL_MAX]; //N_EL_MAX
-    uint8_t step_choice = 0;
-    for(uint16_t iCnfg=0;iCnfg<MaxCnfgRnd;iCnfg++){
-        null_bit_cnfg(&ManyCnfg[iCnfg]);
+    float vecKsi[N_EL_MAX]; //N_EL_MAX
+    uint8_t stepChoice = 0;
+    for(uint16_t iCnfg=0;iCnfg<maxCnfgRnd;iCnfg++){
+        nullBitCnfg(manyCnfg[iCnfg]);
     }
 
-    uint32_t ResNumCnfg=0;
-    for(uint8_t iCnfg=0;iCnfg<MaxCnfgRnd;iCnfg++){
-        for(uint8_t step=0;step<NumOnboardDevice+NumMode;step++)
-        {
-          culc_all_ksi(SmbCnfgStart.adr, VecKsi, FULL);
-          //------------------- Выбираем элемент ---------------------------------
-          step_choice = FindRandKsi(VecKsi, NumOnboardDevice);// начиная с 1;
-          w_bit(ManyCnfg[iCnfg].adr, step_choice, ENBL);
+    uint32_t resNumCnfg=0;
+    for(uint8_t iCnfg=0;iCnfg<maxCnfgRnd;iCnfg++){
+        for(uint8_t step=0;step<numOnboardDevice+numMode;step++){
+            culcAllKsi(smbCnfgStart, vecKsi, FULL);
+            //------------------- Выбираем элемент ---------------------------------
+            stepChoice = findRandKsi(vecKsi, numOnboardDevice);// начиная с 1;
+            wBit(manyCnfg[iCnfg], stepChoice, ENBL);
         //----------- Поднимаем флаг как UP и выбираем новый элемент
-          w_smb(SmbCnfgStart.adr, step_choice, UP);
+          wSmb(smbCnfgStart, stepChoice, UP);
         // если выбранный элемент позволил включить систему, то выход
-          testP = culc_p(SmbCnfgStart.adr);
+          testP = culcP(smbCnfgStart);
           if(equl (testP,1.0f)){
-              ResNumCnfg++;
+              resNumCnfg++;
               break;
               // step; количество элементов вкл в конфигурацию
           }
         }//generate single configuration cicle
-        bit_to_smb(Cserv.adr,SmbCnfgStart.adr);
-        for(iMode=NumOnboardDevice+1;iMode<=NumOnboardDevice+NumMode;iMode++)
-            if(ENBL == r_bit(&ExctMode,iMode-NumOnboardDevice))
-                w_smb(SmbCnfgStart.adr,iMode,DOWN);
+        bitToSmb(servCnfg,smbCnfgStart);
+        for(iMode=numOnboardDevice+1;iMode<=numOnboardDevice+numMode;iMode++)
+            if(ENBL == rBit(&exctMode,iMode-numOnboardDevice))
+                wSmb(smbCnfgStart,iMode,DOWN);
             else
-                w_smb(SmbCnfgStart.adr,iMode,UP);
+                wSmb(smbCnfgStart,iMode,UP);
     }//generate configurations cicle
-    return ResNumCnfg;
+    return resNumCnfg;
 }
 
-void ChoiseCnfgFromAll(bit_configuration Cserv, uint32_t * NumCnfg){
+void choiseCnfgFromAll(BitConfiguration servCnfg, uint32_t * numCnfg){
     uint8_t iMode=0;
-    for(iMode=NumOnboardDevice+1;iMode<=NumOnboardDevice+NumMode;iMode++){
-        //if(ENBL == r_bit(&ExctMode,iMode-NumOnboardDevice))
-            w_bit(Cserv.adr,iMode,DISBL); //ENBL 27.02.2022
-            NumCnfg[iMode-NumOnboardDevice-1]=0;
+    for(iMode=numOnboardDevice+1;iMode<=numOnboardDevice+numMode;iMode++){
+      //if(ENBL == r_bit(&ExctMode,iMode-numOnboardDevice))
+        wBit(servCnfg,iMode,DISBL); //ENBL 27.02.2022
+        numCnfg[iMode-numOnboardDevice-1]=0;
     }
     //unsigned int ResNumCnfg = 0;
     uint32_t iCnfg = 0;
     uint8_t iBit = 0;
-    _Bool FlagCnfg = TRUE;
-    for(iMode=0;iMode<NumMode;iMode++){//iMode=NumOnboardDevice+1;iMode<=NumOnboardDevice+NumMode;iMode++
-        if(ENBL == r_bit(&ExctMode,iMode+1)){
-            w_bit(Cserv.adr,iMode+NumOnboardDevice+1,ENBL);
-            for(iCnfg=0;iCnfg<MaxInAllCnfg;iCnfg++) {
-                for(iBit=1;iBit<=NumOnboardDevice+NumMode;iBit++){
-                    if(DOWN == r_bit(Cserv.adr,iBit) &&
-                       ENBL == r_bit(AllCnfg[iCnfg].adr,iBit)){
-                         FlagCnfg = FALSE;
-                         break;
+    _Bool isWorkCnfg = TRUE;
+    for(iMode=0;iMode<numMode;iMode++){//iMode=numOnboardDevice+1;iMode<=numOnboardDevice+NumMode;iMode++
+        if(ENBL == rBit(&exctMode,iMode+1)){
+            wBit(servCnfg,iMode+numOnboardDevice+1,ENBL);
+            for(iCnfg=0;iCnfg<maxInAllCnfg;iCnfg++) {
+                for(iBit=1;iBit<=numOnboardDevice+numMode;iBit++){
+                    if(DOWN == rBit(servCnfg,iBit) &&
+                       ENBL == rBit(allCnfg[iCnfg],iBit)){
+                        isWorkCnfg = FALSE;
+                        break;
                     }
                 }
-                if(FlagCnfg){
-                    copy(ManyCnfgForMode[iMode][NumCnfg[iMode]].adr, AllCnfg[iCnfg].adr);
-                    NumCnfg[iMode]++;
+                if(isWorkCnfg){
+                    copy(manyCnfgForMode[iMode][numCnfg[iMode]] , allCnfg[iCnfg] );
+                    numCnfg[iMode]++;
                 }
-                FlagCnfg = TRUE;
+                isWorkCnfg = TRUE;
             }
-            w_bit(Cserv.adr,iMode,DISBL);
+            wBit(servCnfg,iMode,DISBL);
         }
     }
 
-    for(iMode=NumOnboardDevice+1;iMode<=NumOnboardDevice+NumMode;iMode++){
-        if(ENBL == r_bit(&ExctMode,iMode-NumOnboardDevice))
-            w_bit(Cserv.adr,iMode,ENBL);
+    for(iMode=numOnboardDevice+1;iMode<=numOnboardDevice+numMode;iMode++){
+        if(ENBL == rBit(&exctMode,iMode-numOnboardDevice))
+            wBit(servCnfg,iMode,ENBL);
     }
    // return ResNumCnfg;
 }
 
-void CnfgEqulTimeRand(uint32_t NumCnfg){
+void cnfgEqulTimeRand(uint32_t numCnfg){
 
-    float MaxValIndex = 0;
-    float CurValIndex = 0;
-    uint32_t ChoiseCnfg = N_STR_MAX;
+    float maxValIndex = 0;
+    float curValIndex = 0;
+    uint32_t choiseCnfg = N_STR_MAX;
     uint32_t iCnfg=0;
     uint8_t iBit=0;
-    uint8_t SummEnbl=0;
+    uint8_t summEnbl=0;
     float ci = 0;
-    for(iCnfg=0;iCnfg<NumCnfg;iCnfg++){
-        CurValIndex = 0;
-        SummEnbl=0;
-        for(iBit=1;iBit<=NumOnboardDevice;iBit++){ // NumOnboardDevice + ??? NumMode
-            if(ENBL == r_bit(ManyCnfg[iCnfg].adr,iBit)){
-                ci = (Tmax[iBit-1] - Tcur[iBit-1])/Tmax[iBit-1];
-                CurValIndex = CurValIndex + ci;
-                SummEnbl++;
+    for(iCnfg=0;iCnfg<numCnfg;iCnfg++){
+        curValIndex = 0;
+        summEnbl=0;
+        for(iBit=1;iBit<=numOnboardDevice;iBit++){ // numOnboardDevice + ??? NumMode
+            if(ENBL == rBit(manyCnfg[iCnfg] ,iBit)){
+                ci = (tMax[iBit-1] - tCur[iBit-1])/tMax[iBit-1];
+                curValIndex = curValIndex + ci;
+                summEnbl++;
             }
         }
-        CurValIndex = CurValIndex/SummEnbl;
-        if(CurValIndex>MaxValIndex){
-            MaxValIndex = CurValIndex;
-            ChoiseCnfg = iCnfg;
+        curValIndex = curValIndex/summEnbl;
+        if(curValIndex>maxValIndex){
+            maxValIndex = curValIndex;
+            choiseCnfg = iCnfg;
         }
     }
-    if(N_STR_MAX == ChoiseCnfg)
+    if(N_STR_MAX == choiseCnfg)
         printf("\n Erroe:CnfgEqulTime()");
     else
-        copy(Con.adr,ManyCnfg[ChoiseCnfg].adr); // конфигурация сразу для всех исп. режимов
+        copy(cOn ,manyCnfg[choiseCnfg] ); // конфигурация сразу для всех исп. режимов
 }
 
-void CnfgEqulTimeMode(uint32_t * NumCnfg){
+void cnfgEqulTimeMode(uint32_t * numCnfg){
 
-    float MaxValIndex = 0;
-    float CurValIndex = 0;
-    uint32_t ChoiseCnfg[ON_ALL_MODE];
+    float maxValIndex = 0;
+    float curValIndex = 0;
+    uint32_t choiseCnfg[ON_ALL_MODE];
     uint32_t iCnfg=0;
     uint8_t iBit=0;
-    uint8_t SummEnbl=0;
+    uint8_t summEnbl=0;
     float ci = 0;
     uint8_t iMode=0;
-    for(iMode=0;iMode<NumMode;iMode++){
-        ChoiseCnfg[iMode] = N_STR_MAX;
-        if(ENBL == r_bit(&ExctMode,iMode+1)){
-            for(iCnfg=0;iCnfg<NumCnfg[iMode];iCnfg++){
-                CurValIndex = 0;
-                SummEnbl=0;
-                for(iBit=1;iBit<=NumOnboardDevice;iBit++){
-                    if(ENBL == r_bit(ManyCnfgForMode[iMode][iCnfg].adr,iBit)){
-                        ci = (Tmax[iBit-1] - Tcur[iBit-1])/Tmax[iBit-1];
-                        CurValIndex = CurValIndex + ci;
-                        SummEnbl++;
+    for(iMode=0;iMode<numMode;iMode++){
+        choiseCnfg[iMode] = N_STR_MAX;
+        if(ENBL == rBit(&exctMode,iMode+1)){
+            for(iCnfg=0;iCnfg<numCnfg[iMode];iCnfg++){
+                curValIndex = 0;
+                summEnbl=0;
+                for(iBit=1;iBit<=numOnboardDevice;iBit++){
+                    if(ENBL == rBit(manyCnfgForMode[iMode][iCnfg] ,iBit)){
+                        ci = (tMax[iBit-1] - tCur[iBit-1])/tMax[iBit-1];
+                        curValIndex = curValIndex + ci;
+                        summEnbl++;
                     }
                 }
-                CurValIndex = CurValIndex/SummEnbl;
-                if(CurValIndex>MaxValIndex){
-                    MaxValIndex = CurValIndex;
-                    ChoiseCnfg[iMode] = iCnfg;
+                curValIndex = curValIndex/summEnbl;
+                if(curValIndex>maxValIndex){
+                    maxValIndex = curValIndex;
+                    choiseCnfg[iMode] = iCnfg;
                 }
             }
-            MaxValIndex = 0;
+            maxValIndex = 0;
         }
     }
 
     _Bool FlagErr = TRUE;
-    for(iMode=0;iMode<NumMode;iMode++)
-            if(N_STR_MAX > ChoiseCnfg[iMode])
+    for(iMode=0;iMode<numMode;iMode++)
+            if(N_STR_MAX > choiseCnfg[iMode])
                 FlagErr = FALSE;
     if(TRUE==FlagErr)
             printf("Erroe:CnfgEqulTimeMode()");
 
-    for(iMode=0;iMode<NumMode;iMode++){
-        if(N_STR_MAX != ChoiseCnfg[iMode]){
-            copy(Con.adr,ManyCnfgForMode[iMode][ChoiseCnfg[iMode]].adr);
+    for(iMode=0;iMode<numMode;iMode++){
+        if(N_STR_MAX != choiseCnfg[iMode]){
+            copy(cOn ,manyCnfgForMode[iMode][choiseCnfg[iMode]] );
             break;
         }
     }
     iMode++;
-    for(       ;iMode<NumMode;iMode++){
-            if(N_STR_MAX != ChoiseCnfg[iMode]){
-                w_bit(Con.adr,iMode+NumOnboardDevice+1,ENBL);
-                for(iBit=1;iBit<=NumOnboardDevice;iBit++){
-                    if(DISBL == r_bit(Con.adr,iBit) &&
-                       ENBL == r_bit(ManyCnfgForMode[iMode][ChoiseCnfg[iMode]].adr,iBit) )
-                        w_bit(Con.adr,iBit,ENBL);
+    for(       ;iMode<numMode;iMode++){
+            if(N_STR_MAX != choiseCnfg[iMode]){
+                wBit(cOn ,iMode+numOnboardDevice+1,ENBL);
+                for(iBit=1;iBit<=numOnboardDevice;iBit++){
+                    if(DISBL == rBit(cOn ,iBit) &&
+                       ENBL == rBit(manyCnfgForMode[iMode][choiseCnfg[iMode]] ,iBit) )
+                        wBit(cOn ,iBit,ENBL);
                 }
             }
     }
 
-    smb_configuration SmbCnfgOn;
-    bit_to_smb(Con.adr,SmbCnfgOn.adr);
-    for(iBit=1;iBit<=NumOnboardDevice;iBit++){
-          w_smb(SmbCnfgOn.adr,iBit,DOWN);
-            if(culc_p(SmbCnfgOn.adr)>0.0f){
-                w_bit(Con.adr,iBit,DOWN);
+    SmbConfiguration SmbCnfgOn;
+    bitToSmb(cOn ,SmbCnfgOn );
+    for(iBit=1;iBit<=numOnboardDevice;iBit++){
+          wSmb(SmbCnfgOn ,iBit,DOWN);
+            if(culcP(SmbCnfgOn )>0.0f){
+                wBit(cOn ,iBit,DOWN);
             }
-          bit_to_smb(Con.adr,SmbCnfgOn.adr);
+          bitToSmb(cOn ,SmbCnfgOn );
     }
 }
 
-void FormCnfgOn(bit_configuration Cserv){
-
-    if(ALG_RAND_RSCH == FlagAlgReCnfg){
-      uint32_t NumCnfgRand = 0;
-      NumCnfgRand = RandGnrtCnfg(Cserv);
-      CnfgEqulTimeRand(NumCnfgRand);
-    }else if (ALG_FULL_ENUM == FlagAlgReCnfg){
-      uint32_t NumCnfgMode[ON_ALL_MODE];
-      ChoiseCnfgFromAll(Cserv, NumCnfgMode);
-      CnfgEqulTimeMode(NumCnfgMode);
+void formCnfgOn(BitConfiguration cServ){
+    if(ALG_RAND_RSCH == flagAlgReCnfg){
+        uint32_t numCnfgRand = 0;
+        numCnfgRand = randGnrtCnfg(cServ);
+        cnfgEqulTimeRand(numCnfgRand);
+    }else if (ALG_FULL_ENUM == flagAlgReCnfg){
+        uint32_t numCnfgMode[ON_ALL_MODE];
+        choiseCnfgFromAll(cServ, numCnfgMode);
+        cnfgEqulTimeMode(numCnfgMode);
     }
 }
 
-void IncludeModes(bit_configuration * Cnfg){
+void includeModes(BitConfiguration * cnfg){
     uint8_t iMode=0;
-    for(iMode=NumOnboardDevice+1;iMode<=NumOnboardDevice+NumMode;iMode++)
-        if(ENBL == r_bit(&ExctMode,iMode-NumOnboardDevice))
-            w_bit(Cnfg->adr,iMode,ENBL);
+    for(iMode=numOnboardDevice+1;iMode<=numOnboardDevice+numMode;iMode++)
+        if(ENBL == rBit(&exctMode,iMode-numOnboardDevice))
+            wBit(*cnfg,iMode,ENBL);
         else
-            w_bit(Cnfg->adr,iMode,DISBL);
+            wBit(*cnfg,iMode,DISBL);
 }
 
-void InitFswRcnf1(bit_configuration * InitC, uint8_t Elements, uint8_t Modes)
-{
-    w_byte(&ExctMode,CNFG_ALL_MODE_TEST);
-    NumOnboardDevice = Elements; //4Gyro+2Fss+2St+2Mag+4Whl+3Mtb = 17
-    NumMode = Modes; //LVHL, SunOriuntation, ProgrammReturn = 3
-    SumExctMode = NumMode;
-    MaxCnfgRnd = 20; //пусть будет столько пока 3.03.2022
+void initFswRcnf1(BitConfiguration * initC, uint8_t Elements, uint8_t Modes){
+    wByte(&exctMode,CNFG_ALL_MODE_TEST);
+    numOnboardDevice = Elements; //4Gyro+2Fss+2St+2Mag+4Whl+3Mtb = 17
+    numMode = Modes; //LVHL, SunOriuntation, ProgrammReturn = 3
+    sumExctMode = numMode;
+    maxCnfgRnd = 20; //пусть будет столько пока 3.03.2022
 
     char NamePolinomFile[128] = "polynom/PolEk.txt";
     // char NamePolinomFile[128] = "SimplePol.txt";
-    LoadPlnmFromFile(NamePolinomFile,&ScPolinim);
-    PolinomInit(&ScPolinim);
-    FlagAlgReCnfg = ALG_FULL_ENUM;
-    if(ALG_FULL_ENUM == FlagAlgReCnfg){
-        MaxInAllCnfg = FindConfiguration(&ScPolinim, AllCnfg, NumOnboardDevice, NumMode);
-        for(uint32_t i=0;i<MaxInAllCnfg;i++){
-                        printf("Cnfg No(%i) : ",i+1);
-                        for(uint8_t j=1;j<=NumOnboardDevice+NumMode;j++){
-                                if(r_bit(AllCnfg[i].adr,j))
-                                    printf("P%i ",j);
-                        }
-                        printf("\n");
+    loadPlnmFromFile(NamePolinomFile,&scPolinim);
+    setLibPolinom(&scPolinim);
+    flagAlgReCnfg = ALG_FULL_ENUM;
+    if(ALG_FULL_ENUM == flagAlgReCnfg){
+        maxInAllCnfg = findConfiguration(&scPolinim, allCnfg, numOnboardDevice, numMode);
+        for(uint32_t i=0;i<maxInAllCnfg;i++){
+            printf("Cnfg No(%i) : ",i+1);
+            for(uint8_t j=1;j<=numOnboardDevice+numMode;j++){
+                if(rBit(allCnfg[i] ,j))
+                    printf("P%i ",j);
+            }
+            printf("\n");
         }
     }
 
-    FlagAlgReCnfg = ALG_RAND_RSCH;
-    bit_configuration Cserv;//serviceable device
-    SetCnfg(Cserv.adr,ENBL);//for Initial
+    flagAlgReCnfg = ALG_RAND_RSCH;
+    BitConfiguration servCnfg;//serviceable device
+    setCnfg(servCnfg,ENBL);//for Initial
     uint8_t i=0;
     for (i=0;i<Elements;i++){
-        Tcur[i] = 0.0;
-        Tmax[i] = 200.0; //tDevmax[i] - можно подать на вход
+        tCur[i] = 0.0;
+        tMax[i] = 200.0; //tDevmax[i] - можно подать на вход
     }
-    FormCnfgOn(Cserv);
-    IncludeModes(&Con);
-    (*InitC) = Con;
-    //return Con;
+    formCnfgOn(servCnfg);
+    includeModes(&cOn);
+    copy(*initC,cOn); //(*initC) = cOn;
 }
 
-bit_configuration InitFswRcnf(uint8_t Elements, uint8_t Modes)
-{
-    w_byte(&ExctMode,CNFG_ALL_MODE_TEST);
-    NumOnboardDevice = Elements; //4Gyro+2Fss+2St+2Mag+4Whl+3Mtb = 17
-    NumMode = Modes; //LVHL, SunOriuntation, ProgrammReturn = 3
-    SumExctMode = NumMode;
-    MaxCnfgRnd = 10; //пусть будет столько пока 3.03.2022
+BitConfiguration * initFswRcnf(char * namePolinomFile, uint8_t elements, uint8_t modes){
+    wByte(&exctMode,CNFG_ALL_MODE_TEST);
+    numOnboardDevice = elements; //4Gyro+2Fss+2St+2Mag+4Whl+3Mtb = 17
+    numMode = modes; //LVHL, SunOriuntation, ProgrammReturn = 3
+    sumExctMode = numMode;
+    maxCnfgRnd = 10; //пусть будет столько пока 3.03.2022
 
-    char NamePolinomFile[128] = "polynom/PolEk.txt";
-    // char NamePolinomFile[128] = "SimplePol.txt";
-    LoadPlnmFromFile(NamePolinomFile,&ScPolinim);
-    PolinomInit(&ScPolinim);
-    FlagAlgReCnfg = ALG_FULL_ENUM;
-    if(ALG_FULL_ENUM == FlagAlgReCnfg){
-        MaxInAllCnfg = FindConfiguration(&ScPolinim, AllCnfg, NumOnboardDevice, NumMode);
-        for(uint32_t i=0;i<MaxInAllCnfg;i++){
-                        printf("Cnfg No(%i) : ",i+1);
-                        for(uint8_t j=1;j<=NumOnboardDevice+NumMode;j++){
-                                if(r_bit(AllCnfg[i].adr,j))
-                                    printf("P%i ",j);
-                        }
-                        printf("\n");
+    //char NamePolinomFile[128] = "polynom/PolEk.txt";
+
+    loadPlnmFromFile(namePolinomFile,&scPolinim);
+    setLibPolinom(&scPolinim);
+    flagAlgReCnfg = ALG_FULL_ENUM;
+    if(ALG_FULL_ENUM == flagAlgReCnfg){
+        maxInAllCnfg = findConfiguration(&scPolinim, allCnfg, numOnboardDevice, numMode);
+        for(uint32_t i=0;i<maxInAllCnfg;i++){
+            printf("Cnfg No(%i) : ",i+1);
+            for(uint8_t j=1;j<=numOnboardDevice+numMode;j++){
+                if(rBit(allCnfg[i] ,j))
+                    printf("P%i ",j);
+            }
+            printf("\n");
         }
     }
 
-    FlagAlgReCnfg = ALG_RAND_RSCH;
-    bit_configuration Cserv;//serviceable device
-    SetCnfg(Cserv.adr,ENBL);//for Initial
+    flagAlgReCnfg = ALG_RAND_RSCH;
+    BitConfiguration servCnfg;//serviceable device
+    setCnfg(servCnfg,ENBL);//for Initial
     uint8_t i=0;
-    for (i=0;i<Elements;i++){
-        Tcur[i] = 0.0;
-        Tmax[i] = ONE_YEAR_IN_SEC; //tDevmax[i] - можно подать на вход
+    for (i=0;i<elements;i++){
+        tCur[i] = 0.0;
+        tMax[i] = ONE_YEAR_IN_SEC; //tDevmax[i] - можно подать на вход
     }
-    FormCnfgOn(Cserv);
-    IncludeModes(&Con);
-    return Con;
+    formCnfgOn(servCnfg);
+    includeModes(&cOn);
+    return &cOn;
 }
 
-uint32_t Reconfiguration(bit_configuration Cserv, float * TcurIn, bit_configuration * CnfgInTheLoop)
-{
-    FormExctMode(Cserv);
-    if(SumExctMode>0){
+uint32_t reconfiguration(BitConfiguration servCnfg, float * tCurIn, BitConfiguration * cnfgInTheLoop){
+    formExctMode(servCnfg);
+    if(sumExctMode>0){
         uint8_t i;
-        for (i=0;i<NumOnboardDevice;i++)
-            Tcur[i] = TcurIn[i];
-        FormCnfgOn(Cserv);
+        for (i=0;i<numOnboardDevice;i++)
+            tCur[i] = tCurIn[i];
+        formCnfgOn(servCnfg);
     }
     else
         return 0;
 
-    copy(CnfgInTheLoop->adr, Con.adr);
-    IncludeModes(CnfgInTheLoop);
-    uint32_t res = (uint32_t)SumExctMode;
+    copy(*cnfgInTheLoop, cOn);
+    includeModes(cnfgInTheLoop);
+    uint32_t res = (uint32_t)sumExctMode;
     return res;
 }
