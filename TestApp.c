@@ -12,10 +12,8 @@ void showCnfg(BitConfiguration cnfgIn,unsigned char nEl){
     }
 }
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]){
 
-    //float Tmax[N_EL_MAX];
     float Tcur[N_EL_MAX];
     unsigned char i;
     for (i=0;i<N_EL_MAX;i++)
@@ -27,15 +25,19 @@ int main(int argc, char *argv[])
 
     char polinomName[127];
     if(argc == 1){
-        strcpy(polinomName,"polynom/Neuro.txt");
+        strcpy(polinomName,"polinom/Neuro.txt");
     }else if(argc == 2){
         strcpy(polinomName,argv[1]);
     }else{
-        printf("Please, next time add input parameters for programm \n");
+        printf("Error, more then one input parameter for programm. Try again \n");
         return -1;
     }
 
-    Con = initFswRcnf(polinomName,Elements,Mode); //10 - элементов, 4 - режима
+    float Tmax[N_EL_MAX];
+    for(i=0;i<N_EL_MAX;i++)
+        Tmax[i] = 200.0; // ONE_YEAR_IN_SECнапример так
+
+    Con = initFswRcnf(polinomName,Elements,Mode,Tmax); //17 - элементов, 3 - режима
     copy(ConConst,*Con);
     showCnfg(*Con,Elements+Mode);
 
@@ -93,6 +95,8 @@ int main(int argc, char *argv[])
         }
         Tsim = 0;
         Tfail = 100;
+        for (i=0;i<N_EL_MAX;i++)
+            Tcur[i] = 0;
         over = FALSE;
         setCnfg(servCnfg ,ENBL);
         copy(*Con , ConConst );
