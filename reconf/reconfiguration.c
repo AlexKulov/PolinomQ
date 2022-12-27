@@ -148,13 +148,19 @@ void cnfgEqulTimeRand(uint32_t numCnfg){
     uint32_t iCnfg=0;
     uint8_t iBit=0;
     uint8_t summEnbl=0;
+    float testTime[N_EL_MAX];
     float ci = 0;
     for(iCnfg=0;iCnfg<numCnfg;iCnfg++){
         curValIndex = 0;
         summEnbl=0;
         for(iBit=1;iBit<=numOnboardDevice;iBit++){ // numOnboardDevice + ??? NumMode
+            testTime[iBit-1] = tCur[iBit-1];
             if(ENBL == rBit(manyCnfg[iCnfg] ,iBit)){
-                ci = (tMax[iBit-1] - tCur[iBit-1])/tMax[iBit-1];
+                if(tMax[iBit-1] - tCur[iBit-1]<0){
+                    ci=0.0;
+                }else{
+                    ci = (tMax[iBit-1] - tCur[iBit-1])/tMax[iBit-1];
+                }
                 curValIndex = curValIndex + ci;
                 summEnbl++;
             }
@@ -298,7 +304,7 @@ void initFswRcnf1(BitConfiguration * initC, uint8_t Elements, uint8_t Modes){
     copy(*initC,cOn); //(*initC) = cOn;
 }
 
-BitConfiguration * initFswRcnf(char * namePolinomFile, uint8_t elements, uint8_t modes){
+BitConfiguration * initFswRcnf(char * namePolinomFile, uint8_t elements, uint8_t modes, float * setTauMax){
     wByte(&exctMode,CNFG_ALL_MODE_TEST);
     numOnboardDevice = elements; //4Gyro+2Fss+2St+2Mag+4Whl+3Mtb = 17
     numMode = modes; //LVHL, SunOriuntation, ProgrammReturn = 3
@@ -328,14 +334,37 @@ BitConfiguration * initFswRcnf(char * namePolinomFile, uint8_t elements, uint8_t
     uint8_t i=0;
     for (i=0;i<elements;i++){
         tCur[i] = 0.0;
-        tMax[i] = ONE_YEAR_IN_SEC; //tDevmax[i] - можно подать на вход
+        tMax[i] = setTauMax[i]; //ONE_YEAR_IN_SEC
     }
     formCnfgOn(servCnfg);
     includeModes(&cOn);
     return &cOn;
 }
 
+static uint8_t checkServCnfg(BitConfiguration servCnfg, float * tCurIn, uint8_t * n){
+    uint8_t nRes=0;
+    *n = 0;
+    for(uint8_t iBit=1;iBit<=numOnboardDevice;iBit++){
+        if(ENBL == rBit(servCnfg ,iBit)){
+            (*n)++;
+            if(tCurIn[iBit-1]>tMax[iBit-1]){
+               wBit(servCnfg, iBit, DISBL);
+            }
+            else{
+                nRes++;
+            }
+        }
+    }
+    return nRes;
+}
+
 uint32_t reconfiguration(BitConfiguration servCnfg, float * tCurIn, BitConfiguration * cnfgInTheLoop){
+    uint8_t nWorkBeforCheck = 0;
+    uint8_t nWorkAfterCheck = checkServCnfg(servCnfg, tCurIn, &nWorkBeforCheck);
+    if(nWorkBeforCheck != nWorkAfterCheck){
+        printf("\n %i working elemets, %i elements brocken by max time",
+               nWorkAfterCheck,(nWorkBeforCheck - nWorkAfterCheck));
+    }
     formExctMode(servCnfg);
     if(sumExctMode>0){
         uint8_t i;
